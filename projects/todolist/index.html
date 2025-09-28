@@ -3,9 +3,796 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>To-Do List App</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #ffffff;
+            color: #1a1a1a;
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Left Side - Scrollable Content */
+        .left-side {
+            flex: 1;
+            max-width: 60%;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            background-color: #fafafa;
+        }
+
+        /* Header */
+        .header {
+            padding: 2rem;
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border-bottom: 2px solid #dee2e6;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            color: #6c757d;
+            font-size: 1rem;
+            font-weight: 400;
+        }
+
+        /* Main Content Area */
+        .main-content {
+            flex: 1;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        /* Card Styles */
+        .card {
+            background-color: #ffffff;
+            border: 2px solid #e9ecef;
+            border-radius: 20px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            transition: all 0.3s ease;
+            border-radius: 20px 20px 0 0;
+        }
+
+        .card.add-task::before {
+            background: linear-gradient(90deg, #28a745, #20c997);
+        }
+
+        .card.ongoing::before {
+            background: linear-gradient(90deg, #ffc107, #fd7e14);
+        }
+
+        .card.completed::before {
+            background: linear-gradient(90deg, #6f42c1, #e83e8c);
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+            border-color: #ced4da;
+        }
+
+        .card-title {
+            font-size: 1.4rem;
+            color: #2c3e50;
+            margin-bottom: 1.5rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .card-title::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .add-task .card-title::before {
+            background-color: #28a745;
+        }
+
+        .ongoing .card-title::before {
+            background-color: #ffc107;
+        }
+
+        .completed .card-title::before {
+            background-color: #6f42c1;
+        }
+
+        /* Input Styles */
+        .input-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .task-input {
+            flex: 1;
+            min-width: 200px;
+            padding: 0.75rem 1rem;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background-color: #f8f9fa;
+        }
+
+        .date-input {
+            min-width: 160px;
+            padding: 0.75rem 1rem;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background-color: #f8f9fa;
+        }
+
+        .task-input:focus, .date-input:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+            background-color: #ffffff;
+        }
+
+        .add-btn {
+            padding: 0.75rem 1.5rem;
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 10px rgba(0, 123, 255, 0.3);
+            white-space: nowrap;
+        }
+
+        .add-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 123, 255, 0.4);
+        }
+
+        .add-btn:active {
+            transform: translateY(0);
+        }
+
+        /* Display Fields */
+        .task-display {
+            min-height: 100px;
+            background-color: #f8f9fa;
+            border-radius: 12px;
+            padding: 1rem;
+            border: 2px dashed #dee2e6;
+        }
+
+        .task-item {
+            background-color: #ffffff;
+            padding: 0.75rem 1rem;
+            margin-bottom: 0.5rem;
+            border-radius: 8px;
+            border-left: 4px solid #007bff;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+
+        .task-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .task-item.ongoing {
+            border-left-color: #ffc107;
+        }
+
+        .task-item.priority {
+            border-left-color: #dc3545;
+            background-color: #fff5f5;
+            animation: pulse-priority 2s infinite;
+        }
+
+        @keyframes pulse-priority {
+            0%, 100% { box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+            50% { box-shadow: 0 4px 15px rgba(220, 53, 69, 0.2); }
+        }
+
+        .task-item.completed {
+            border-left-color: #28a745;
+            text-decoration: line-through;
+            opacity: 0.7;
+        }
+
+        .task-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .task-text {
+            font-size: 0.95rem;
+            color: #373c41;
+            font-size: 700;
+        }
+
+        .task-meta {
+            font-size: 0.8rem;
+            color: #6c757d;
+            display: flex;
+            gap: 1rem;
+        }
+
+        .due-date {
+            font-weight: 500;
+        }
+
+        .time-remaining {
+            color: #007bff;
+        }
+
+        .time-remaining.warning {
+            color: #ffc107;
+            font-weight: 600;
+        }
+
+        .time-remaining.critical {
+            color: #dc3545;
+            font-weight: 700;
+            animation: blink 1.5s infinite;
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0.5; }
+        }
+
+        .task-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .action-btn {
+            padding: 0.25rem 0.5rem;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .move-btn {
+            background-color: #fbfbfb;
+        }
+
+        .delete-btn {
+            background-color: #fefdfd;
+        }
+
+        .action-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .empty-state {
+            text-align: center;
+            color: #6c757d;
+            font-style: italic;
+            padding: 2rem 1rem;
+        }
+
+        /* Footer */
+        .footer {
+            padding: 1.5rem 2rem;
+            background: linear-gradient(135deg, #e9ecef, #f8f9fa);
+            border-top: 2px solid #dee2e6;
+            text-align: center;
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+
+        /* Right Side - Fixed Image */
+        .right-side {
+            flex: 1;
+            max-width: 40%;
+            position: fixed;
+            right: 0;
+            top: 0;
+            height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow:hidden;
+        }
+
+        .image-container {
+            object-fit: contain;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+
+            .left-side {
+                max-width: 100%;
+            }
+
+            .right-side {
+                position: relative;
+                max-width: 100%;
+                height: 250px;
+                order: -1;
+            }
+
+            .header {
+                padding: 1.5rem;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .main-content {
+                padding: 1rem;
+                gap: 1rem;
+            }
+
+            .card {
+                padding: 1rem;
+            }
+
+            .input-group {
+                flex-direction: column;
+            }
+
+            .task-input, .date-input {
+                min-width: unset;
+            }
+
+            .add-btn {
+                width: 100%;
+            }
+
+            .task-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.5rem;
+            }
+
+            .task-actions {
+                align-self: flex-end;
+            }
+        }
+
+        /* Scrollbar Styling */
+        .left-side::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .left-side::-webkit-scrollbar-track {
+            background: #f1f3f4;
+        }
+
+        .left-side::-webkit-scrollbar-thumb {
+            background: #ced4da;
+            border-radius: 4px;
+        }
+
+        .left-side::-webkit-scrollbar-thumb:hover {
+            background: #adb5bd;
+        }
+    </style>
 </head>
 <body>
-    
+    <div class="container">
+        <!-- Left Side - Scrollable Content -->
+        <div class="left-side">
+            <!-- Header -->
+            <header class="header">
+                <h1 id="headerTitle">Waguri says ~ Do it.....</h1>
+                <p id="headerMessage">Not for yourself but for her , complete it fast and go watch the anime again</p>
+            </header>
+
+            <!-- Main Content -->
+            <main class="main-content">
+                <!-- Add Task Card -->
+                <div class="card add-task">
+                    <h3 class="card-title">Add New Task</h3>
+                    <div class="input-section">
+                        <div class="input-group">
+                            <input type="text" class="task-input" placeholder="Enter your task here..." id="taskInput">
+                            <input type="datetime-local" class="date-input" id="dueDateInput">
+                            <button class="add-btn" onclick="addTask()">Add Task</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Ongoing Tasks Card -->
+                <div class="card ongoing">
+                    <h3 class="card-title">Ongoing Tasks</h3>
+                    <div class="task-display" id="ongoingTasks">
+                        <div class="empty-state">
+                            Your active tasks will appear here
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Completed Tasks Card -->
+                <div class="card completed">
+                    <h3 class="card-title">Completed Tasks</h3>
+                    <div class="task-display" id="completedTasks">
+                        <div class="empty-state">
+                            Completed tasks will be shown here
+                        </div>
+                    </div>
+                </div>
+            </main>
+
+            <!-- Footer -->
+            <footer class="footer">
+                <p>Designed by someone named Pranav but inspired by God Hariom.</p>
+            </footer>
+        </div>
+
+        <!-- Right Side - Fixed Image -->
+        <div class="right-side">
+            <img src="images/study.jpg" class="image-container" id="rotatingImage">
+        </div>
+    </div>
+
+    <script>
+        let tasks = {};
+
+        // Image array
+        const imageArray = [
+            'images/study.jpg',
+            'images/flustered.jpg',
+            'images/sleeping.jpg',
+        ];
+
+        // Set default date (3 days from now)
+        function setDefaultDate() {
+            const dateInput = document.getElementById('dueDateInput');
+            const defaultDate = new Date();
+            defaultDate.setDate(defaultDate.getDate() + 3);
+            
+            // Format for datetime-local input
+            const year = defaultDate.getFullYear();
+            const month = String(defaultDate.getMonth() + 1).padStart(2, '0');
+            const day = String(defaultDate.getDate()).padStart(2, '0');
+            const hours = String(defaultDate.getHours()).padStart(2, '0');
+            const minutes = String(defaultDate.getMinutes()).padStart(2, '0');
+            
+            const formattedDate = `${year}-${month}-${day}T${hours}:${minutes}`;
+            dateInput.value = formattedDate;
+        }
+
+        // Calculate time remaining
+        function getTimeRemaining(dueDate) {
+            const now = new Date().getTime();
+            const due = new Date(dueDate).getTime();
+            const diff = due - now;
+
+            if (diff < 0) {
+                return { text: 'Overdue', status: 'critical' };
+            }
+
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+
+            let timeText = '';
+            if (days > 0) {
+                timeText = `${days}d ${hours}h`;
+            } else if (hours > 0) {
+                timeText = `${hours}h ${minutes}m`;
+            } else {
+                timeText = `${minutes}m`;
+            }
+
+            // Determine status
+            const totalHours = diff / (1000 * 60 * 60);
+            let status = 'normal';
+            if (totalHours < 6) {
+                status = 'critical';
+            } else if (totalHours < 24) {
+                status = 'warning';
+            }
+
+            return { text: timeText, status };
+        }
+
+        // Check if task is high priority (less than 6 hours remaining)
+        function isHighPriority(dueDate) {
+            const now = new Date().getTime();
+            const due = new Date(dueDate).getTime();
+            const diff = due - now;
+            const hoursRemaining = diff / (1000 * 60 * 60);
+            return hoursRemaining < 6 ;
+        }
+
+        // Load tasks from localStorage
+        function loadTasks() {
+            const savedTasks = localStorage.getItem('todoTasks');
+            if (savedTasks) {
+                tasks = JSON.parse(savedTasks);
+            }
+        }
+
+        // Save tasks to localStorage
+        function saveTasks() {
+            localStorage.setItem('todoTasks', JSON.stringify(tasks));
+        }
+
+        // Get ongoing tasks (completed: false) sorted by due date
+        function getOngoingTasks() {
+            return Object.values(tasks)
+                .filter(task => !task.completed)
+                .sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
+        }
+
+        // Get completed tasks (completed: true) sorted by completion date
+        function getCompletedTasks() {
+            return Object.values(tasks)
+                .filter(task => task.completed)
+                .sort((a, b) => new Date(b.completedDate || b.dueDate) - new Date(a.completedDate || a.dueDate));
+        }
+
+        // Update header and image based on task priority
+        function updateHeaderAndImage() {
+            const ongoingTasks = getOngoingTasks();
+            const highPriorityTasks = ongoingTasks.filter(task => isHighPriority(task.dueDate));
+            const totalTasks = ongoingTasks.length;
+            const highPriorityTaskssize = highPriorityTasks.length;
+
+            const headerTitle = document.getElementById('headerTitle');
+            const headerMessage = document.getElementById('headerMessage');
+            const imageElement = document.getElementById('rotatingImage');
+
+            // Case 1: High priority tasks exist (less than 6 hours)
+            if (highPriorityTaskssize >= 1) {
+                headerTitle.textContent = "Waguri says ~ Do it fast!!!";
+                headerMessage.textContent = "You are already out of time for one or more of your tasks! Focus and finish them quickly!";
+                imageElement.src = imageArray[1]; // flustered.jpg
+            }
+            else if (totalTasks >= 3 && highPriorityTaskssize == 0) {
+                headerTitle.textContent = "Waguri says ~ Take it easy ";
+                headerMessage.textContent = "There are no urgent tasks right now, but keep working steadily on your goals!";
+                imageElement.src = imageArray[0]; // study.jpg
+            }
+            else if (totalTasks < 3 && totalTasks > 0 && highPriorityTaskssize == 0) {
+                headerTitle.textContent = "Waguri says ~ You can rest for a while";
+                headerMessage.textContent = "I'm sleeping and you can take a rest too! You're doing great with so few tasks left!";
+                imageElement.src = imageArray[2]; // sleeping.jpg
+            }
+            else {
+                headerTitle.textContent = "Waguri says ~ I'm happy for you";
+                headerMessage.textContent = "There are no more tasks left , you are free to go watch the anime once again.";
+                imageElement.src = imageArray[0]; // study.jpg
+            }
+        }
+
+        function addTask() {
+            const taskInput = document.getElementById('taskInput');
+            const dateInput = document.getElementById('dueDateInput');
+            const taskText = taskInput.value.trim();
+            let dueDate = dateInput.value;
+
+            if (taskText === '') {
+                alert('Please enter a task name!');
+                return;
+            }
+
+            // If no date is provided, use default (3 days from now)
+            if (!dueDate) {
+                const defaultDate = new Date();
+                defaultDate.setDate(defaultDate.getDate() + 3);
+                dueDate = defaultDate.toISOString();
+            } else {
+                dueDate = new Date(dueDate).toISOString();
+            }
+
+            const taskId = Date.now();
+            const task = {
+                id: taskId,
+                description: taskText,
+                dueDate: dueDate,
+                completed: false,
+                timestamp: new Date().toLocaleString()
+            };
+
+            tasks[taskId] = task;
+            taskInput.value = '';
+            setDefaultDate(); // Reset to default date
+            
+            saveTasks();
+            renderTasks();
+            updateHeaderAndImage();
+        }
+
+        function moveToCompleted(taskId) {
+            if (tasks[taskId]) {
+                tasks[taskId].completed = true;
+                tasks[taskId].completedDate = new Date().toISOString();
+                saveTasks();
+                renderTasks();
+                updateHeaderAndImage(); 
+            }
+        }
+
+        function deleteTask(taskId) {
+            if (tasks[taskId]) {
+                delete tasks[taskId];
+                saveTasks();
+                renderTasks();
+                updateHeaderAndImage(); 
+            }
+        }
+
+        function moveToOngoing(taskId) {
+            if (tasks[taskId]) {
+                tasks[taskId].completed = false;
+                delete tasks[taskId].completedDate;
+                saveTasks();
+                renderTasks();
+                updateHeaderAndImage(); 
+            }
+        }
+
+        function renderTasks() {
+            const ongoingTasks = getOngoingTasks();
+            const completedTasks = getCompletedTasks();
+        
+            // Render ongoing tasks
+            const ongoingContainer = document.getElementById('ongoingTasks');
+            if (ongoingTasks.length === 0) {
+                ongoingContainer.innerHTML = '<div class="empty-state">Your active tasks will appear here</div>';
+            } else {
+                ongoingContainer.innerHTML = ongoingTasks.map(task => {
+                    const timeRemaining = getTimeRemaining(task.dueDate);
+                    const isPriority = isHighPriority(task.dueDate);
+                    const dueDate = new Date(task.dueDate).toLocaleDateString('en-US', {
+                        weekday: 'short',
+                        month: 'short',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+
+                    return `
+                        <div class="task-item ${isPriority ? 'priority' : 'ongoing'}">
+                            <div class="task-content">
+                                <span class="task-text">${task.description}</span>
+                                <div class="task-meta">
+                                    <span class="due-date">Due: ${dueDate}</span>
+                                    <span class="time-remaining ${timeRemaining.status}">${timeRemaining.text}${timeRemaining.text === 'Overdue' ? '' : ' remaining'}</span>
+                                </div>
+                            </div>
+                            <div class="task-actions">
+                                <button class="action-btn move-btn" onclick="moveToCompleted(${task.id})"><img src="icons/complete.png" alt="Complete" width="24" height="24"></button>
+                                <button class="action-btn delete-btn" onclick="deleteTask(${task.id})"><img src="icons/delete.png" alt="Delete" width="24" height="24"></button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            // Render completed tasks
+            const completedContainer = document.getElementById('completedTasks');
+            if (completedTasks.length === 0) {
+                completedContainer.innerHTML = '<div class="empty-state">Completed tasks will be shown here</div>';
+            } else {
+                completedContainer.innerHTML = completedTasks.map(task => {
+                    const completedDate = new Date(task.completedDate || task.dueDate).toLocaleDateString('en-US', {
+                        weekday: 'short',
+                        month: 'short',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+
+                    return `
+                        <div class="task-item completed">
+                            <div class="task-content">
+                                <span class="task-text">${task.description}</span>
+                                <div class="task-meta">
+                                    <span class="due-date">Completed: ${completedDate}</span>
+                                </div>
+                            </div>
+                            <div class="task-actions">
+                                <button class="action-btn move-btn" onclick="moveToOngoing(${task.id})"><img src="icons/reopen.png" alt="Reopen" width="24" height="24"></button>
+                                <button class="action-btn delete-btn" onclick="deleteTask(${task.id})"><img src="icons/delete.png" alt="Delete" width="24" height="24"></button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+        }
+
+        // Update time remaining every minute
+        function updateTimeRemaining() {
+            renderTasks();
+            updateHeaderAndImage(); 
+        }
+
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', function() {
+            loadTasks();
+            setDefaultDate();
+            renderTasks();
+            updateHeaderAndImage(); 
+        
+            // Allow Enter key to add task
+            const taskInput = document.getElementById('taskInput');
+            const dateInput = document.getElementById('dueDateInput');
+            
+            if (taskInput) {
+                taskInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        addTask();
+                    }
+                });
+            }
+
+            if (dateInput) {
+                dateInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        addTask();
+                    }
+                });
+            }
+
+            // Update time remaining every minute
+            setInterval(updateTimeRemaining, 60000);
+        });
+    </script>
 </body>
 </html>
